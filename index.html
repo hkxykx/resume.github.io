@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人简历</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    font-family: "SimSun", "宋体", serif;
+    font-size: 12pt;
+    background: #0a0a12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ===== 背景渐变 + 光晕 ===== */
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 80, 200, 0.15), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(60, 100, 220, 0.1), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(180, 60, 160, 0.08), transparent 60%),
+      linear-gradient(180deg, #0a0a12 0%, #111122 30%, #0d0d1a 60%, #0a0a12 100%);
+  }
+  .bg-glow {
+    position: fixed; border-radius: 50%; filter: blur(120px);
+    opacity: 0.25; z-index: 0; pointer-events: none;
+    animation: floatGlow 8s ease-in-out infinite;
+  }
+  .bg-glow.g1 {
+    width: 600px; height: 600px; top: -15%; left: 50%;
+    transform: translateX(-50%); background: rgba(130, 80, 220, 0.6);
+  }
+  .bg-glow.g2 {
+    width: 400px; height: 400px; bottom: -10%; left: 10%;
+    background: rgba(50, 100, 240, 0.5); animation: floatGlow2 10s ease-in-out infinite;
+  }
+  .bg-glow.g3 {
+    width: 450px; height: 450px; bottom: -5%; right: 5%;
+    background: rgba(200, 80, 160, 0.45); animation: floatGlow3 9s ease-in-out infinite;
+  }
+  @keyframes floatGlow {
+    0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+    25%  { transform: translateX(-50%) translateY(-30px) scale(1.08); }
+    50%  { transform: translateX(-50%) translateY(10px) scale(0.95); }
+    75%  { transform: translateX(-50%) translateY(-15px) scale(1.04); }
+  }
+  @keyframes floatGlow2 {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%  { transform: translateY(-40px) scale(1.1); }
+  }
+  @keyframes floatGlow3 {
+    0%, 100% { transform: translateY(0) scale(1); }
+    33%  { transform: translateY(25px) scale(1.06); }
+    66%  { transform: translateY(-20px) scale(0.94); }
+  }
+
+  .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ===== 视频开场画面 ===== */
+  .splash-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  .splash-screen.hidden {
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  .splash-screen video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .splash-overlay {
+    position: absolute; inset: 0;
+    /* 使用这个层可以覆盖视频中的文字，如果视频文字区域有深色背景的话 */
+    pointer-events: none;
+  }
+
+  /* 文字叠加层 — 放在视频上方 */
+  .splash-text-panel {
+    position: absolute; z-index: 10;
+    /* 位于视频左上角 */
+    top: 6%; left: 3%; transform: none;
+    display: flex; flex-direction: column; gap: 10px;
+    background: rgba(10, 10, 22, 0.65);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(140, 120, 220, 0.35);
+    border-radius: 16px;
+    padding: 28px 38px;
+    animation: splashPanelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+    box-shadow: 0 0 50px rgba(120, 80, 210, 0.2);
+  }
+  @keyframes splashPanelIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .splash-text-panel .splash-name {
+    font-family: "SimSun", "宋体", serif;
+    font-size: 22pt; color: #e8e0ff; letter-spacing: 4px;
+    text-align: center; margin-bottom: 6px;
+    text-shadow: 0 0 30px rgba(160, 120, 240, 0.5);
+  }
+  .splash-text-panel .splash-title {
+    font-family: "SimSun", "宋体", serif;
+    font-size: 14pt; color: #c0b0e8; letter-spacing: 3px;
+    text-align: center; margin-bottom: 6px;
+    padding-bottom: 12px; border-bottom: 1px solid rgba(140, 120, 220, 0.3);
+  }
+  .splash-text-panel .splash-stats {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .splash-text-panel .splash-stat-row {
+    display: flex; justify-content: space-between; gap: 32px;
+    font-family: "SimSun", "宋体", serif; font-size: 13pt;
+  }
+  .splash-stat-row .stat-label {
+    color: #9888c0; letter-spacing: 1px;
+  }
+  .splash-stat-row .stat-value {
+    color: #d8d0f0; letter-spacing: 1px; text-align: right;
+  }
+
+  /* 跳过按钮 */
+  .splash-skip {
+    position: absolute; bottom: 30px; right: 30px; z-index: 20;
+    padding: 8px 20px;
+    font-family: "SimSun", "宋体", serif; font-size: 11pt;
+    color: #9888c0;
+    background: rgba(20, 20, 40, 0.5);
+    border: 1px solid rgba(120, 100, 200, 0.3);
+    border-radius: 20px; cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all 0.35s;
+    letter-spacing: 1px;
+  }
+  .splash-skip:hover {
+    color: #d0c8f0;
+    border-color: rgba(160, 140, 230, 0.6);
+    background: rgba(30, 30, 55, 0.7);
+    box-shadow: 0 0 20px rgba(120, 80, 210, 0.2);
+  }
+
+  /* ===== 主容器 ===== */
+  .main-container {
+    position: relative; z-index: 1; width: 100%; max-width: 1100px;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 30px 24px; gap: 22px;
+  }
+
+  /* ===== 主按钮 ===== */
+  .btn-resume {
+    position: relative; padding: 16px 56px; font-family: "SimSun", "宋体", serif;
+    font-size: 16pt; color: #e0d8f0;
+    background: rgba(120, 80, 200, 0.12);
+    border: 1px solid rgba(140, 110, 230, 0.5); border-radius: 8px;
+    cursor: pointer; letter-spacing: 4px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10; backdrop-filter: blur(6px);
+    box-shadow: 0 0 30px rgba(130, 90, 220, 0.15), inset 0 0 30px rgba(130, 90, 220, 0.05);
+  }
+  .btn-resume:hover {
+    background: rgba(140, 90, 230, 0.25);
+    border-color: rgba(170, 130, 250, 0.8);
+    box-shadow: 0 0 50px rgba(140, 100, 240, 0.35), 0 0 100px rgba(140, 100, 240, 0.1), inset 0 0 40px rgba(140, 100, 240, 0.1);
+    color: #fff; transform: translateY(-2px);
+  }
+  .btn-resume .btn-hint {
+    display: block; font-size: 10pt; color: #8878b8;
+    letter-spacing: 1px; margin-top: 4px;
+  }
+  .btn-resume:active { transform: scale(0.97); transition: transform 0.15s; }
+
+  /* ===== 初始页两个高级卡片 ===== */
+  .landing-cards {
+    display: flex; gap: 24px; z-index: 10; opacity: 1;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .special-card {
+    position: relative; width: 240px; padding: 32px 24px;
+    background: rgba(18, 18, 38, 0.7); border-radius: 16px;
+    cursor: pointer; text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+  .special-card.card-resume {
+    border: 1px solid rgba(100, 180, 255, 0.35);
+    box-shadow: 0 0 40px rgba(60, 140, 240, 0.12), inset 0 0 60px rgba(60, 140, 240, 0.04);
+  }
+  .special-card.card-resume::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 16px; padding: 1px;
+    background: linear-gradient(135deg, rgba(100,180,255,0.5), transparent 40%, transparent 60%, rgba(100,180,255,0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; z-index: -1;
+  }
+  .special-card.card-resume::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 20%, rgba(100,180,255,0.08), transparent 50%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .special-card.card-resume:hover::after { opacity: 1; }
+  .special-card.card-resume:hover {
+    border-color: rgba(120, 200, 255, 0.7);
+    box-shadow: 0 0 60px rgba(60, 150, 250, 0.25), 0 0 120px rgba(60, 150, 250, 0.08), inset 0 0 80px rgba(60, 150, 250, 0.06);
+    transform: translateY(-4px);
+  }
+
+  .special-card.card-project {
+    border: 1px solid rgba(180, 120, 240, 0.35);
+    box-shadow: 0 0 40px rgba(140, 80, 220, 0.12), inset 0 0 60px rgba(140, 80, 220, 0.04);
+  }
+  .special-card.card-project::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 16px; padding: 1px;
+    background: linear-gradient(135deg, rgba(180,120,240,0.5), transparent 40%, transparent 60%, rgba(180,120,240,0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; z-index: -1;
+  }
+  .special-card.card-project::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at 70% 20%, rgba(180,120,240,0.08), transparent 50%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .special-card.card-project:hover::after { opacity: 1; }
+  .special-card.card-project:hover {
+    border-color: rgba(200, 140, 255, 0.7);
+    box-shadow: 0 0 60px rgba(150, 90, 240, 0.25), 0 0 120px rgba(150, 90, 240, 0.08), inset 0 0 80px rgba(150, 90, 240, 0.06);
+    transform: translateY(-4px);
+  }
+
+  .special-card .card-icon {
+    width: 100%; height: 180px; margin-bottom: 14px;
+    border-radius: 10px; object-fit: cover;
+    transition: transform 0.4s, box-shadow 0.4s;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .special-card:hover .card-icon { transform: scale(1.03); }
+  .special-card .card-img-label {
+    font-family: "SimSun", "宋体", serif; font-size: 11pt;
+    color: #8878b8; letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .special-card .card-title {
+    font-family: "SimSun", "宋体", serif; font-size: 14pt;
+    letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .card-resume .card-title { color: #a0d0ff; }
+  .card-project .card-title { color: #c8a8f8; }
+  .special-card .card-sub {
+    font-size: 11pt; color: #706890; letter-spacing: 1px;
+  }
+
+  /* ===== PDF 弹窗 ===== */
+  .pdf-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .pdf-overlay.active { display: flex; }
+  .pdf-modal {
+    position: relative; width: 85vw; max-width: 1000px; height: 85vh;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 80, 200, 0.15), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(60, 100, 220, 0.1), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(180, 60, 160, 0.08), transparent 60%),
+      linear-gradient(180deg, #0a0a12 0%, #111122 30%, #0d0d1a 60%, #0a0a12 100%);
+    border: 1px solid rgba(140,120,220,0.4);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6), 0 0 120px rgba(120,80,220,0.15);
+    display: flex; flex-direction: column;
+    animation: modalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.92) translateY(30px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .pdf-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; border-bottom: 1px solid rgba(140,120,220,0.2);
+    flex-shrink: 0;
+  }
+  .pdf-modal-header span {
+    font-size: 13pt; color: #d0c8f0; letter-spacing: 2px;
+  }
+  .pdf-modal-close {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: #a098c0; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+    font-family: "SimSun", "宋体", serif; line-height: 1;
+  }
+  .pdf-modal-close:hover {
+    background: rgba(255,80,80,0.2); border-color: rgba(255,80,80,0.5); color: #ff6666;
+  }
+  .pdf-modal-body {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 20px; color: #605878; font-size: 12pt;
+    flex-direction: column; gap: 12px;
+  }
+  .pdf-modal-body .upload-hint {
+    color: #706890; font-size: 11pt;
+    text-align: center; line-height: 2;
+  }
+  .pdf-modal-body .upload-hint strong { color: #b0a0d8; }
+  .pdf-modal-body iframe {
+    width: 100%; height: 100%; border: none; border-radius: 8px;
+  }
+
+  /* ===== 简历内容区（初始隐藏） ===== */
+  .resume-content {
+    display: none; width: 100%; flex-direction: column; gap: 16px;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .resume-content.visible { display: flex; }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== 模块通用样式 ===== */
+  .module {
+    background: rgba(20, 20, 40, 0.6);
+    border: 1px solid rgba(120, 100, 200, 0.25);
+    border-radius: 12px; padding: 28px 32px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: border-color 0.4s, box-shadow 0.4s;
+    color: #c8c0d8; line-height: 1.9;
+  }
+  .module:hover {
+    border-color: rgba(150, 130, 230, 0.5);
+    box-shadow: 0 8px 40px rgba(100, 60, 200, 0.2), 0 0 80px rgba(100, 60, 200, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  .module h3 {
+    font-family: "SimSun", "宋体", serif; font-size: 14pt; font-weight: normal;
+    color: #d0c8f0; margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 1px solid rgba(140, 120, 220, 0.3); letter-spacing: 2px;
+  }
+  .module h4 {
+    font-family: "SimSun", "宋体", serif; font-size: 12pt; font-weight: normal;
+    color: #c0b8e0; margin: 14px 0 8px 0; letter-spacing: 1px;
+  }
+  .module .section-sub {
+    color: #a098c0; font-size: 11pt; margin-bottom: 6px;
+    padding-left: 8px; border-left: 2px solid rgba(140, 120, 220, 0.4);
+  }
+  .module ul { list-style: none; padding-left: 0; }
+  .module ul li {
+    position: relative; padding-left: 16px; margin-bottom: 6px;
+    color: #b8b0c8; font-size: 12pt; line-height: 1.9;
+  }
+  .module ul li::before {
+    content: '·'; position: absolute; left: 0; color: #8878b8; font-weight: bold;
+  }
+  .module .meta-line {
+    color: #8878b8; font-size: 11pt; margin-bottom: 6px; letter-spacing: 1px;
+  }
+  .module .highlight-tag {
+    display: inline-block;
+    background: rgba(120, 80, 200, 0.15);
+    border: 1px solid rgba(140, 110, 220, 0.35);
+    border-radius: 4px; padding: 1px 8px; margin: 2px 4px 2px 0;
+    font-size: 11pt; color: #c0b0e8;
+  }
+
+  /* ===== 返回按钮 ===== */
+  .btn-back {
+    position: fixed; top: 20px; left: 20px; z-index: 20;
+    display: none; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    font-family: "SimSun", "宋体", serif; font-size: 11pt;
+    color: #9888c0;
+    background: rgba(20, 20, 40, 0.55);
+    border: 1px solid rgba(120, 100, 200, 0.3);
+    border-radius: 20px; cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    letter-spacing: 1px;
+  }
+  .btn-back .back-arrow { font-size: 14px; transition: transform 0.3s; }
+  .btn-back:hover {
+    color: #d0c8f0;
+    border-color: rgba(160, 140, 230, 0.6);
+    background: rgba(30, 30, 55, 0.7);
+    box-shadow: 0 0 20px rgba(120, 80, 210, 0.2);
+  }
+  .btn-back:hover .back-arrow { transform: translateX(-3px); }
+  .btn-back:active { transform: scale(0.95); }
+
+  /* ===== 基本信息模块 ===== */
+  #module-info { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  #module-info .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px 30px; align-items: start;
+  }
+  #module-info .info-item { display: flex; align-items: baseline; gap: 8px; }
+  #module-info .info-label {
+    color: #9888c0; white-space: nowrap; min-width: 4.5em; font-size: 12pt;
+  }
+  #module-info .info-value { color: #d8d0f0; font-size: 12pt; outline: none; }
+  #module-info .info-value[contenteditable="true"]:focus {
+    background: rgba(120, 80, 200, 0.15); border-radius: 4px; padding: 0 6px;
+  }
+
+  /* ===== 底部模块（纵向排列） ===== */
+  .bottom-modules {
+    display: flex; flex-direction: column; gap: 16px;
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 768px) {
+    .landing-cards { flex-direction: column; gap: 16px; }
+    .special-card { width: 220px; padding: 24px 18px; }
+    #module-info .info-grid { grid-template-columns: 1fr 1fr; }
+    .main-container { padding: 20px 14px; }
+    .splash-text-panel { left: 5%; right: 5%; transform: none; bottom: 10%; padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== 视频开场画面 ==================== -->
+<div class="splash-screen" id="splashScreen">
+  <video id="splashVideo" src="feixue3.mp4" autoplay playsinline preload="auto"></video>
+
+  <!-- 文字覆盖层 — 显示更正后的信息 -->
+  <div class="splash-text-panel" id="splashText">
+    <div class="splash-name">王云飞</div>
+    <div class="splash-title">Linux运维工程师</div>
+    <div class="splash-stats">
+      <div class="splash-stat-row">
+        <span class="stat-label">工作经验</span>
+        <span class="stat-value">1年</span>
+      </div>
+      <div class="splash-stat-row">
+        <span class="stat-label">期望城市</span>
+        <span class="stat-value">合肥</span>
+      </div>
+      <div class="splash-stat-row">
+        <span class="stat-label">年龄</span>
+        <span class="stat-value">20岁</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="splash-skip" id="splashSkip" onclick="skipSplash()">跳过 &#x276F;</button>
+</div>
+
+<!-- ==================== 背景 ==================== -->
+<div class="bg-layer"></div>
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+<div class="bg-glow g3"></div>
+<canvas class="particles" id="particles"></canvas>
+
+<!-- 返回按钮 -->
+<button class="btn-back" id="btnBack" onclick="goBack()">
+  <span class="back-arrow">&#x2190;</span> 返回
+</button>
+
+<!-- PDF 弹窗 -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-modal-header">
+      <span id="pdfTitle">PDF 预览</span>
+      <button class="pdf-modal-close" onclick="closePdf()">✕</button>
+    </div>
+    <div class="pdf-modal-body" id="pdfBody"></div>
+  </div>
+</div>
+
+<!-- 主容器 -->
+<div class="main-container" id="mainContainer">
+
+  <button class="btn-resume" id="btnResume" onclick="openResume()">
+    个 人 简 历
+    <span class="btn-hint">（请点击我）</span>
+  </button>
+
+  <div class="landing-cards" id="landingCards">
+    <div class="special-card card-resume" onclick="openPdf('个人简历信息', 'resume.pdf')">
+      <img class="card-icon" src="feixue1.jpg" alt="个人简历信息">
+      <div class="card-img-label">个人简历信息</div>
+      <div class="card-sub">PDF 档案</div>
+    </div>
+    <div class="special-card card-project" onclick="openPdf('项目实例', 'projects.pdf')">
+      <img class="card-icon" src="feixue2.jpg" alt="项目实例">
+      <div class="card-img-label">项目实例</div>
+      <div class="card-sub">PDF 档案</div>
+    </div>
+  </div>
+
+  <!-- 简历内容 -->
+  <div class="resume-content" id="resumeContent">
+
+    <div class="module" id="module-info">
+      <h3>基本信息</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">姓　　名：</span>
+          <span class="info-value" contenteditable="true">王云飞</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">工作经验：</span>
+          <span class="info-value" contenteditable="true">1年</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">期望城市：</span>
+          <span class="info-value" contenteditable="true">合肥</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">邮　　箱：</span>
+          <span class="info-value" contenteditable="true">2799852495@qq.com</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">电　　话：</span>
+          <span class="info-value" contenteditable="true">19268900715</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-modules">
+      <div class="module" id="module-strengths">
+        <h3>个人优势</h3>
+        <h4>云原生架构</h4>
+        <ul>
+          <li>具备从0到1的服务器搭建及K8s集群部署经验，熟练使用Docker、Kubernetes、Helm进行容器化编排，主导过微服务容器化改造项目。</li>
+        </ul>
+        <h4>CI/CD自动化</h4>
+        <ul>
+          <li>精通Jenkins Pipeline流水线设计，整合GitLab、Harbor、Maven实现全流程自动化构建与部署，显著提升交付效率。</li>
+        </ul>
+        <h4>AI驱动运维</h4>
+        <ul>
+          <li>擅长利用DeepSeek V4 Pro、Claude等大语言模型辅助工作，搭建AI自动化工作流，用于Shell脚本编写、故障排查及运维文档生成。</li>
+        </ul>
+        <h4>全栈中间件</h4>
+        <ul>
+          <li>熟练掌握Nginx/LVS+Keepalived高可用架构、MySQL主从复制、Redis哨兵模式及ELK日志分析体系。</li>
+        </ul>
+        <h4>AI工具与工作流应用</h4>
+        <p class="section-sub">AI辅助开发与运维：</p>
+        <ul>
+          <li>熟练使用 Claude 及 DeepSeek V4 Pro 模型进行复杂的Shell/Python脚本编写与优化，减少重复性编码时间约40%。</li>
+          <li>利用AI进行YAML文件（K8s/Docker-Compose）的语法检查与逻辑纠错，提高配置文件的一次性通过率。</li>
+        </ul>
+        <p class="section-sub">智能化工作流搭建：</p>
+        <ul>
+          <li>搭建基于AI的日志分析预处理工作流，通过Prompt Engineering快速定位Java/Python项目报错根源，辅助传统监控工具（Zabbix/Prometheus）进行根因分析。</li>
+          <li>利用AI生成标准化的运维交付文档、巡检报告及故障复盘报告，提升文档产出效率。</li>
+        </ul>
+        <h4>证书与荣誉</h4>
+        <ul>
+          <li><span class="highlight-tag">全国计算机大赛</span> 三等奖</li>
+          <li><span class="highlight-tag">HCIA-AI</span> 华为认证ICT工程师（已报名预计月底拿到）</li>
+          <li><span class="highlight-tag">软考</span> 初中级备考中（预计年底取证）</li>
+          <li><span class="highlight-tag">C1驾驶证</span></li>
+        </ul>
+      </div>
+
+      <div class="module" id="module-internship">
+        <h3>实习经历</h3>
+        <p style="color:#d0c8f0; font-size:14pt; margin-bottom:2px;">安徽省通信产业服务有限公司</p>
+        <p class="meta-line">岗位：Linux运维工程师</p>
+        <h4>容器化改造与云原生部署</h4>
+        <p class="meta-line">2025.06 — 2026.04</p>
+        <ul>
+          <li>主导核心业务系统从传统部署向容器化迁移，负责K8s集群（Rancher管理）环境搭建及Ingress-Nginx、Harbor等基础组件部署。</li>
+          <li>针对SpringCloud微服务架构，定制Dockerfile（前端Nginx+后端JDK1.8），通过Pipeline实现镜像构建与滚动更新，保障业务零中断上线。</li>
+        </ul>
+        <h4>自动化运维与监控</h4>
+        <ul>
+          <li>基于Jenkins+GitLab实现CI/CD流水线，集成Maven打包与K8s资源清单部署；负责数据库（MySQL主从）及缓存（Redis哨兵）的高可用架构维护与备份恢复。</li>
+          <li>利用Zabbix/Prometheus配置定制化监控项及微信/邮件告警，结合ELK栈实现日志集中收集，快速响应线上故障（如节点失联、存储不足）。</li>
+        </ul>
+        <h4>服务器治理</h4>
+        <ul>
+          <li>编写Shell脚本实现服务器自动巡检、垃圾清理及存储扩容（LVM/Parted），确保线上环境健康运行。</li>
+        </ul>
+      </div>
+
+      <div class="module" id="module-projects">
+        <h3>项目经验</h3>
+        <p class="section-sub">项目描述：针对原有Docker单机部署扩展性差的问题，重构为基于K8s的微服务架构，引入DevOps流程提升交付效率。</p>
+        <p style="color:#a098c0; font-size:11pt; margin-bottom:12px;">
+          技术栈：<span class="highlight-tag">Kubernetes</span><span class="highlight-tag">Docker</span><span class="highlight-tag">Jenkins</span><span class="highlight-tag">GitLab</span><span class="highlight-tag">Harbor</span><span class="highlight-tag">Rancher</span><span class="highlight-tag">Nacos</span><span class="highlight-tag">Redis</span><span class="highlight-tag">SpringCloud</span>
+        </p>
+        <h4>核心职责</h4>
+        <p class="section-sub">架构设计：</p>
+        <ul>
+          <li>梳理微服务依赖关系，设计PV/PVC+NFS持久化方案，通过Rsync同步数据至存储服务器保障数据安全。</li>
+        </ul>
+        <p class="section-sub">流水线构建：</p>
+        <ul>
+          <li>采用Git Parameter + Jenkinsfile实现参数化构建，定义Maven打包→Docker镜像构建→Harbor推送→K8s部署的全流程Pipeline。</li>
+        </ul>
+        <p class="section-sub">故障攻坚：</p>
+        <ul>
+          <li>解决Jenkins容器内Docker.sock挂载问题；通过Log日志分析定位Java项目运行丢失问题；处理Node节点NotReady状态及端口冲突，优化资源分配策略。</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ===== 视频开场 =====
+  (function() {
+    const video = document.getElementById('splashVideo');
+    const splash = document.getElementById('splashScreen');
+
+    video.addEventListener('ended', function() {
+      splash.classList.add('hidden');
+    });
+
+    // 如果视频加载失败或卡住，5秒后自动跳过
+    setTimeout(function() {
+      if (!splash.classList.contains('hidden') && video.readyState < 2) {
+        splash.classList.add('hidden');
+      }
+    }, 8000);
+
+    // 尝试自动播放
+    video.play().catch(function() {
+      // 某些浏览器需要用户交互才能播放
+      document.addEventListener('click', function playOnce() {
+        video.play();
+        document.removeEventListener('click', playOnce);
+      }, { once: true });
+    });
+  })();
+
+  function skipSplash() {
+    document.getElementById('splashScreen').classList.add('hidden');
+  }
+
+  // ===== 粒子背景 =====
+  (function() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const maxParticles = 50;
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function createParticle() {
+      return {
+        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.5,
+        vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.5 + 0.2,
+      };
+    }
+    for (let i = 0; i < maxParticles; i++) particles.push(createParticle());
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180,150,220,${p.alpha})`; ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+      }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(150,130,210,${0.06 * (1 - dist / 120)})`; ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ===== 打开简历 =====
+  function openResume() {
+    const btn = document.getElementById('btnResume');
+    const cards = document.getElementById('landingCards');
+    const content = document.getElementById('resumeContent');
+    const btnBack = document.getElementById('btnBack');
+
+    btn.style.opacity = '0';
+    btn.style.transform = 'translateY(-20px) scale(0.95)';
+    btn.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    cards.style.opacity = '0';
+    cards.style.transform = 'translateY(-15px)';
+    cards.style.transition = 'all 0.45s cubic-bezier(0.4, 0, 0.2, 1)';
+
+    setTimeout(() => {
+      btn.style.display = 'none';
+      cards.style.display = 'none';
+      content.classList.add('visible');
+      btnBack.style.display = 'flex';
+      btnBack.style.animation = 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both';
+    }, 500);
+  }
+
+  // ===== 返回首页 =====
+  function goBack() {
+    const btn = document.getElementById('btnResume');
+    const cards = document.getElementById('landingCards');
+    const content = document.getElementById('resumeContent');
+    const btnBack = document.getElementById('btnBack');
+
+    content.classList.remove('visible');
+    btnBack.style.display = 'none';
+
+    setTimeout(() => {
+      btn.style.display = '';
+      btn.style.opacity = '1';
+      btn.style.transform = '';
+      btn.style.animation = 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both';
+      cards.style.display = '';
+      cards.style.opacity = '1';
+      cards.style.transform = '';
+      cards.style.animation = 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both';
+    }, 400);
+  }
+
+  // ===== PDF 弹窗 =====
+  function openPdf(title, filePath) {
+    const overlay = document.getElementById('pdfOverlay');
+    const pdfTitle = document.getElementById('pdfTitle');
+    const pdfBody = document.getElementById('pdfBody');
+
+    pdfTitle.textContent = title;
+
+    pdfBody.innerHTML = `
+      <iframe src="${filePath}#toolbar=0&navpanes=0" onerror="this.style.display='none';document.getElementById('fallbackHint').style.display='block';"></iframe>
+      <div id="fallbackHint" class="upload-hint" style="display:none;">
+        <p>📂 请将 PDF 文件放置到与本页面相同的目录下</p>
+        <p>文件名：<strong>${filePath}</strong></p>
+        <p style="margin-top:8px;color:#8878b8;">放置完成后刷新页面即可预览</p>
+      </div>
+    `;
+
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePdf() {
+    document.getElementById('pdfOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('pdfOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closePdf();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePdf();
+  });
+</script>
+</body>
+</html>
