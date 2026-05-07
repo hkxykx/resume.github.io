@@ -430,7 +430,7 @@
 
 <!-- ==================== 视频开场画面 ==================== -->
 <div class="splash-screen" id="splashScreen">
-  <video id="splashVideo" src="feixue3.mp4" autoplay playsinline preload="auto"></video>
+  <video id="splashVideo" autoplay playsinline preload="auto"></video>
 
   <!-- 文字覆盖层 — 显示更正后的信息 -->
   <div class="splash-text-panel" id="splashText">
@@ -613,31 +613,50 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
-  // ===== 视频开场 =====
+  // ===== 视频开场（HLS 流媒体） =====
   (function() {
     const video = document.getElementById('splashVideo');
     const splash = document.getElementById('splashScreen');
+    const hlsUrl = 'feixue3.m3u8';
 
-    video.addEventListener('ended', function() {
-      splash.classList.add('hidden');
-    });
+    function onVideoEnd() { splash.classList.add('hidden'); }
+    video.addEventListener('ended', onVideoEnd);
 
-    // 如果视频加载失败或卡住，5秒后自动跳过
+    // 超时保护：8秒后若视频未开始播放则跳过
     setTimeout(function() {
       if (!splash.classList.contains('hidden') && video.readyState < 2) {
         splash.classList.add('hidden');
       }
     }, 8000);
 
-    // 尝试自动播放
-    video.play().catch(function() {
-      // 某些浏览器需要用户交互才能播放
-      document.addEventListener('click', function playOnce() {
-        video.play();
-        document.removeEventListener('click', playOnce);
-      }, { once: true });
-    });
+    // 加载 HLS 或回退到 MP4
+    if (Hls.isSupported()) {
+      // 大多数浏览器：使用 hls.js
+      var hls = new Hls({
+        enableWorker: false  // 减少开销
+      });
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        video.play().catch(function() {
+          document.addEventListener('click', function playOnce() {
+            video.play();
+            document.removeEventListener('click', playOnce);
+          }, { once: true });
+        });
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari 原生 HLS 支持
+      video.src = hlsUrl;
+      video.addEventListener('loadedmetadata', function() {
+        video.play().catch(function() {});
+      });
+    } else {
+      // 完全不支持 HLS，跳过开场动画
+      splash.classList.add('hidden');
+    }
   })();
 
   function skipSplash() {
